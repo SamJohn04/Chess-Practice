@@ -46,6 +46,7 @@ def click(event):
     castle.clear()
     for a in possi:
         chess_board.delete(a)
+    possi.clear()
     rank=8-int((event.y-4)/70)
     file=int((event.x-1)/70)
     file=chr(ord('a')+file)
@@ -125,6 +126,7 @@ def enp(event,goal,pos):
     g.board[enpassant[0].givepos()]=pieces('')
     g.board[goal.givepos()]=p
     enpassant.clear()
+    g.enpable=""
 def dispR(pos,color):
     possibles=[]
     newpos=pos.move(0,1)
@@ -440,6 +442,7 @@ def dispc(pos):
         chess_board.tag_bind(c,'<Button-1>',lambda event:castl(event,pos))
 def castl(event,pos):
     enpassant.clear()
+    g.enpable=""
     p=g.board[pos.givepos()]
     g.board[pos.givepos()]=pieces('')
     for c in castle:
@@ -486,6 +489,7 @@ def disp(possibles,p):
         chess_board.tag_bind(pos,'<Button-1>',lambda event:go(event,p))
 def go(event,pos):
     enpassant.clear()
+    g.enpable=""
     p=g.board[pos.givepos()]
     g.board[pos.givepos()]=pieces('')
     for a in possi:
@@ -498,10 +502,16 @@ def go(event,pos):
     file=int((event.x-1)/70)
     file=chr(ord('a')+file)
     pos1=position(file,rank)
-    if pos.rank-pos1.rank==2 or pos.rank-pos1.rank==-2:
-        enpassant.append(pos1)
+    if p.p=='p':
+        if pos.rank-pos1.rank==2 or pos.rank-pos1.rank==-2:
+            enpassant.append(pos1)
+            g.enpable=pos1.givepos()
+        g.ht=0
     p.movd+=1
     g.ht+=1
+    p1=g.board[pos1.givepos()]
+    if p1.p!=" ":
+        g.ht=0
     g.board[pos1.givepos()]=p
     if g.turn=='w':
         g.turn='b'
@@ -524,6 +534,26 @@ def go(event,pos):
             g.Q=False
         elif pos.file=='h':
             g.K=False
+    if pos1.givepos()=="a1":
+        g.Q=False
+    if pos1.givepos()=="h1":
+        g.K=False
+    if pos1.givepos()=="a8":
+        g.q=False
+    if pos1.givepos()=="h8":
+        g.K=False
     updateBoard()
 updateBoard()
+
+frame=Frame(root,width=300,height=700)
+frame.grid(row=0,column=1)
+Fen=Entry(frame,width=100)
+Fen.pack()
+def fen():
+    g.toFn()
+    Fen.delete(0,END)
+    Fen.insert(0,g.fen)
+
+fbutton=Button(frame,text="Convert To FEN",command=fen)
+fbutton.pack()
 root.mainloop()

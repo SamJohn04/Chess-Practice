@@ -83,6 +83,7 @@ class game:
         self.K=True
         self.q=True
         self.Q=True
+        self.enpable=""
         for i in range(8,0,-1):
             for j in letters[:8]:
                 p=position(j,i)
@@ -114,3 +115,45 @@ class game:
                         self.board[p.givepos()]=pieces("k")
                 else:
                     self.board[p.givepos()]=pieces("")
+    def toFn(self):
+        self.fen=""
+        c=0
+        for i in range(8,0,-1):
+            for j in letters[:8]:
+                pos=position(j,i)
+                p=self.board[pos.givepos()]
+                if p.p=='':
+                    c+=1
+                elif c!=0:
+                    self.fen+=str(c)
+                    self.fen+=p.p
+                    c=0
+                else:
+                    self.fen+=p.p
+            if c>0:
+                self.fen+=str(c)
+                c=0
+            if i!=1:
+                self.fen+="/"
+        self.fen+=" "
+        self.fen+=self.turn
+        self.fen+=" "
+        if self.K:
+            self.fen+="K"
+        if self.Q:
+            self.fen+="Q"
+        if self.k:
+            self.fen+="k"
+        if self.q:
+            self.fen+="q"
+        self.fen+=" "
+        if self.enpable!="":
+            self.fen+=self.enpable
+        else:
+            self.fen+="-"
+        self.fen+=" "
+        self.fen+=str(self.ht)
+        self.fen+=" "
+        self.fen+=str(self.mc)        
+    def fromfn(self):
+        pass
