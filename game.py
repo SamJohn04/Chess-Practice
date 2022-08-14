@@ -155,5 +155,51 @@ class game:
         self.fen+=str(self.ht)
         self.fen+=" "
         self.fen+=str(self.mc)        
-    def fromfn(self):
-        pass
+    def fromfn(self,fen):
+        self.fen=fen
+        c=0
+        for i in range(8,0,-1):
+            for j in letters[:8]:
+                if c==0:
+                    piece=fen[0]
+                    if piece>'0' and piece<'9':
+                        c=int(piece)
+                        pos=position(j,i)
+                        p=pieces('')
+
+                        c-=1
+                    else:
+                        pos=position(j,i)
+                        p=pieces(piece)
+                    self.board[pos.givepos()]=p
+                    fen=fen[1:]
+                else:
+                    pos=position(j,i)
+                    self.board[pos.givepos()]=pieces('')
+                    c-=1
+            fen=fen[1:]
+        self.turn=fen[0]
+        fen=fen[2:]
+        while fen[0]!=' ':
+            if fen[0]=='K':
+                self.K=True
+            elif fen[0]=='Q':
+                self.Q=True
+            elif fen[0]=='q':
+                self.q=True
+            elif fen[0]=='k':
+                self.k=True
+            fen=fen[1:]
+        fen=fen[1:]
+        if fen[0]!='-':
+            self.enpable=fen[0:2]
+            fen=fen[3:]
+        else:
+            self.enpable=""
+            fen=fen[2:]
+        self.ht=int(fen[0:fen.index(" ")])
+        fen=fen[fen.index(" ")+1:]
+        fp=fen.find(" ")
+        if fp!=-1:
+            fen=fen[:fp]
+        self.mc=int(fen)

@@ -624,7 +624,11 @@ def fen():
     g.toFn()
     Fen.delete(0,END)
     Fen.insert(0,g.fen)
-
+def ffen():
+    g.fromfn(Fen.get())
+    updateBoard()
 fbutton=Button(frame,text="Convert To FEN",command=fen)
+ffbutton=Button(frame,text="Import From FEN",command=ffen)
 fbutton.pack()
+ffbutton.pack()
 root.mainloop()
