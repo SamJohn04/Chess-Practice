@@ -1,5 +1,5 @@
+from asyncio.windows_events import NULL
 from tkinter import *
-from PIL import ImageTk, Image
 from string import ascii_lowercase as letters
 from game import *
 from time import sleep
@@ -40,6 +40,34 @@ def updateBoard():
             b+=1
         a+=1
         b=0
+
+def check(color):
+    possible=[]
+    for i in range(8,0,-1):
+        for j in letters[:8]:
+            p=position(j,i)
+            pc=g.board[p.givepos()]
+            if pc.piece=='k' and pc.color==color:
+                pos=p
+    for i in range(8,0,-1):
+        for j in letters[:8]:
+            p=position(j,i)
+            pc=g.board[p.givepos()]
+            if pc.color!=color and pc.p!="":
+                if pc.piece=='p':
+                    possible.extend(dispP(p,pc.color,pc.movd,False))
+                if pc.piece=='r':
+                    possible.extend(dispR(p,pc.color,False))
+                if pc.piece=='n':
+                    possible.extend(dispN(p,pc.color,False))
+                if pc.piece=='b':
+                    possible.extend(dispB(p,pc.color,False))
+                if pc.piece=='q':
+                    possible.extend(dispQ(p,pc.color,False))
+    for po in possible:
+        if po.givepos()==pos.givepos():
+            return True
+    return False
 def click(event):
     for c in castle:
         chess_board.delete(c)
@@ -47,6 +75,9 @@ def click(event):
     for a in possi:
         chess_board.delete(a)
     possi.clear()
+    for e in enpassant:
+        chess_board.delete(e)
+    enpassant.clear()
     rank=8-int((event.y-4)/70)
     file=int((event.x-1)/70)
     file=chr(ord('a')+file)
@@ -67,7 +98,7 @@ def click(event):
             dispQ(pos,p.color)
         else:
             dispK(pos,p.color)
-def dispP(pos,color,movd):
+def dispP(pos,color,movd,show=True):
     possibles=[]
     if color=='w':
         newpos=pos.move(0,1)
@@ -105,29 +136,35 @@ def dispP(pos,color,movd):
         p=g.board[newpos.givepos()]
         if(p.p!="" and p.color=='w' and newpos.file!=pos.file and newpos.rank!=pos.rank):
             possibles.append(newpos)
-    disp(possibles,pos)
-    if len(enpassant)>0:
-        if ord(pos.file)+1==ord(enpassant[0].file) or ord(pos.file)-1==ord(enpassant[0].file):
-            if pos.rank==enpassant[0].rank:
-                denp(pos)
-def denp(pos):
-    if enpassant[0].rank==5:
-        goal=enpassant[0].move(0,1)
-    else:
-        goal=enpassant[0].move(0,-1)
+    if show:
+        disp(possibles,pos)
+        if g.enpable!="":
+            if color=='w':
+                pos10=pos.move(1,1)
+                pos11=pos.move(-1,1)
+                if pos10.givepos()==g.enpable:
+                    denp(pos,pos10)
+                if pos11.givepos()==g.enpable:
+                    denp(pos,pos11)
+            else:
+                pos10=pos.move(1,-1)
+                pos11=pos.move(-1,-1)
+                if pos10.givepos()==g.enpable:
+                    denp(pos,pos10)
+                if pos11.givepos()==g.enpable:
+                    denp(pos,pos11)
+    return possibles
+def denp(pos,goal):
     p=g.board[goal.givepos()]
     if p.p!='':
         return
     enpassant.append(chess_board.create_image(goal.x+10,goal.y+10,image=possimg,anchor='nw'))
-    chess_board.tag_bind(enpassant[1],'<Button-1>',lambda event:enp(event,goal,pos))
+    chess_board.tag_bind(enpassant[0],'<Button-1>',lambda event:enp(event,goal,pos))
 def enp(event,goal,pos):
-    p=g.board[pos.givepos()]
-    g.board[pos.givepos()]=pieces('')
-    g.board[enpassant[0].givepos()]=pieces('')
-    g.board[goal.givepos()]=p
-    enpassant.clear()
-    g.enpable=""
-def dispR(pos,color):
+    pos1=position(goal.file,pos.rank)
+    g.board[pos1.givepos()]=pieces('')
+    go(event,pos)
+def dispR(pos,color,show=True):
     possibles=[]
     newpos=pos.move(0,1)
     p=g.board[newpos.givepos()]
@@ -173,8 +210,10 @@ def dispR(pos,color):
         p=g.board[newpos.givepos()]
     if p.color!=color and p.p!='':
         possibles.append(newpos)
-    disp(possibles,pos)
-def dispN(pos,color):
+    if show:
+        disp(possibles,pos)
+    return possibles
+def dispN(pos,color,show=True):
     possibles=[]
     if pos.file!='h' and pos.rank<7:
         newpos=pos.move(1,2)
@@ -216,8 +255,10 @@ def dispN(pos,color):
         p=g.board[newpos.givepos()]
         if p.color!=color:
             possibles.append(newpos)
-    disp(possibles,pos)
-def dispB(pos,color):
+    if show:
+        disp(possibles,pos)
+    return possibles
+def dispB(pos,color,show=True):
     possibles=[]
     newpos=pos.move(1,1)
     p=g.board[newpos.givepos()]
@@ -271,8 +312,10 @@ def dispB(pos,color):
         p=g.board[newpos.givepos()]
     if p.color!=color and p.p!=''and newpos.rank!=prevr and newpos.file!=prevf:
         possibles.append(newpos)
-    disp(possibles,pos)
-def dispQ(pos,color):
+    if show:
+        disp(possibles,pos)
+    return possibles
+def dispQ(pos,color,show=True):
     possibles=[]
     newpos=pos.move(1,1)
     p=g.board[newpos.givepos()]
@@ -371,7 +414,9 @@ def dispQ(pos,color):
         p=g.board[newpos.givepos()]
     if p.color!=color and p.p!='':
         possibles.append(newpos)
-    disp(possibles,pos)
+    if show:
+        disp(possibles,pos)
+    return possibles
 def dispK(pos,color):
     b=True
     possibles=[]
@@ -441,6 +486,9 @@ def dispc(pos):
     for c in castle:
         chess_board.tag_bind(c,'<Button-1>',lambda event:castl(event,pos))
 def castl(event,pos):
+    if check(g.turn):
+        checkMessage()
+        return
     enpassant.clear()
     g.enpable=""
     p=g.board[pos.givepos()]
@@ -487,32 +535,55 @@ def disp(possibles,p):
         possi.append(chess_board.create_image(pos.x+10,pos.y+10,image=possimg,anchor="nw"))
     for pos in possi:
         chess_board.tag_bind(pos,'<Button-1>',lambda event:go(event,p))
+def checkMessage():
+    lmsg=Label(frame,text="Your King!!?!")
+    lmsg.pack()
+    lmsg.after(1000,lmsg.destroy)
 def go(event,pos):
-    enpassant.clear()
-    g.enpable=""
+    rank=8-int((event.y-4)/70)
+    file=int((event.x-1)/70)
+    file=chr(ord('a')+file)
     p=g.board[pos.givepos()]
     g.board[pos.givepos()]=pieces('')
+    pos1=position(file,rank)
+    p1=g.board[pos1.givepos()]
+    g.board[pos1.givepos()]=p
+    if check(g.turn):
+        checkMessage()
+        g.board[pos.givepos()]=p
+        g.board[pos1.givepos()]=p1
+        for a in possi:
+            chess_board.delete(a)
+        possi.clear()
+        for c in castle:
+            chess_board.delete(c)
+        castle.clear()
+        for e in enpassant:
+            chess_board.delete(e)
+        enpassant.clear()
+        return
+    for e in enpassant:
+        chess_board.delete(e)
+    enpassant.clear()
+    g.enpable=""
     for a in possi:
         chess_board.delete(a)
     possi.clear()
     for c in castle:
         chess_board.delete(c)
     castle.clear()
-    rank=8-int((event.y-4)/70)
-    file=int((event.x-1)/70)
-    file=chr(ord('a')+file)
-    pos1=position(file,rank)
-    if p.p=='p':
-        if pos.rank-pos1.rank==2 or pos.rank-pos1.rank==-2:
-            enpassant.append(pos1)
-            g.enpable=pos1.givepos()
+    if p.piece=='p':
+        if pos.rank-pos1.rank==2:
+            pos2=pos1.move(0,1)
+            g.enpable=pos2.givepos()
+        if pos.rank-pos1.rank==-2:
+            pos2=pos1.move(0,-1)
+            g.enpable=pos2.givepos()
         g.ht=0
     p.movd+=1
     g.ht+=1
-    p1=g.board[pos1.givepos()]
-    if p1.p!=" ":
+    if p1.p!="":
         g.ht=0
-    g.board[pos1.givepos()]=p
     if g.turn=='w':
         g.turn='b'
     else:
